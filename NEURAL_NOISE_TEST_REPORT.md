@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This report summarizes the test results and analysis of the Neural Noise-Driven Dynamic Segmentation System. We tested the system on a variety of synthetic images and a real anime image of Naruto, exploring the effects of different noise modes and strengths on segmentation quality.
+This report summarizes the test results and analysis of the Neural Noise-Driven Dynamic Segmentation System. We tested the system on a variety of synthetic images, exploring the effects of different noise modes and strengths on segmentation quality.
 
 ## Testing Methodology
 
@@ -11,7 +11,7 @@ We conducted tests using two approaches:
 1. **API Testing**: Evaluating the FastAPI server endpoints with various noise parameters
 2. **Direct Model Testing**: Bypassing the API to work directly with the model for fine-grained control
 
-For these tests, we used both synthetic images with different shapes and an anime character image (Naruto) to evaluate segmentation performance.
+For each test, we used synthetic images with different shapes and complexities to evaluate segmentation performance.
 
 ## Test Results
 
