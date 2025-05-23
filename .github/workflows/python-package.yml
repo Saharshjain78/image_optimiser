@@ -14,10 +14,19 @@ jobs:
         python-version: ['3.8', '3.9', '3.10']
     steps:
     - uses: actions/checkout@v2
+    
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
     
     - name: Install dependencies
       run: |
@@ -53,9 +62,35 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    
     - name: Build Docker image
-      run: docker build . --file Dockerfile --tag neural-noise-seg:$(date +%s)
+      run: |
+        # Build and tag the image with a fixed tag
+        docker build -t neural-noise-seg:latest .
+        echo "Built image: neural-noise-seg:latest"
+        # List the images to confirm
+        docker images
     
     - name: Test Docker image
       run: |
-        docker run --rm neural-noise-seg:$(date +%s) python -c "from models.noise_unet import NoiseAwareUNet; print('Model import successful')"
+        # Check if model file exists before running test
+        if [ -f "models/noise_unet_model.pth" ]; then
+          echo "Model file exists, proceeding with test"
+        else
+          echo "WARNING: Model file not found. Testing module import only."
+        fi
+        
+        # Test the module import (doesn't require model weights)
+        docker run --rm neural-noise-seg:latest python -c "
+        try:
+            from models.noise_unet import NoiseAwareUNet
+            model = NoiseAwareUNet(3, 1)
+            print('Model import and instantiation successful')
+        except Exception as e:
+            print(f'Error: {e}')
+            exit(1)
+        "
+        
+        echo "Docker test completed successfully!"
