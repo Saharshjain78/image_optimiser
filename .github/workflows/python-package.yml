@@ -6,7 +6,8 @@ on:
   pull_request:
     branches: [ main, develop ]
 
-jobs:  test:
+jobs:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
