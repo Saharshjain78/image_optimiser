@@ -1,4 +1,4 @@
-name: Python Package CI
+﻿name: Python Package CI
 
 on:
   push:
@@ -35,6 +35,8 @@ jobs:
     
     - name: Test with pytest
       run: |
+        # Add the project root to PYTHONPATH to ensure modules can be imported
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
         pytest --cov=./ --cov-report=xml -m "not slow and not integration"
     
     - name: Upload coverage to Codecov
