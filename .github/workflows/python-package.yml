@@ -6,9 +6,9 @@ on:
   pull_request:
     branches: [ main, develop ]
 
-jobs:
-  test:
-    runs-on: ubuntu-latest    strategy:
+jobs:  test:
+    runs-on: ubuntu-latest
+    strategy:
       matrix:
         python-version: ['3.8', '3.9', '3.10']
     steps:
