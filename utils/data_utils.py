@@ -100,9 +100,22 @@ def get_data_loaders(data_dir, batch_size=8, train_val_split=0.8, target_size=(2
     return train_loader, val_loader
 
 def preprocess_image(image, target_size=(256, 256)):
-    """Preprocess an image for model input"""
-    # Convert PIL image to numpy array
+    """Preprocess an image for model input with robust handling of various formats"""
+    # Handle PIL image conversion
     if isinstance(image, Image.Image):
+        # Convert to RGB if not already
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        
+        # Handle transparency (RGBA)
+        if hasattr(image, 'mode') and image.mode == 'RGBA':
+            # Create a white background
+            background = Image.new('RGB', image.size, (255, 255, 255))
+            # Paste the image using alpha channel as mask
+            background.paste(image, mask=image.split()[3])
+            image = background
+            
+        # Convert PIL to numpy
         img_array = np.array(image)
     else:
         img_array = image
@@ -119,6 +132,8 @@ def preprocess_image(image, target_size=(256, 256)):
     
     # Normalize to [0, 1]
     img_tensor = img_tensor / 255.0
+    
+    return img_tensor, target_size
     
     return img_tensor
 
@@ -185,59 +200,7 @@ def display_image(image, title=None):
     if title:
         plt.title(title)
 
-def preprocess_image(image, target_size=(256, 256)):
-    """Preprocess a PIL image for model input with robust handling of various formats"""
-    # Convert to RGB if not already
-    if image.mode != 'RGB':
-        image = image.convert('RGB')
-    
-    # Handle transparency (RGBA)
-    if hasattr(image, 'mode') and image.mode == 'RGBA':
-        # Create a white background
-        background = Image.new('RGB', image.size, (255, 255, 255))
-        # Paste the image using alpha channel as mask
-        background.paste(image, mask=image.split()[3])
-        image = background
-    
-    # Auto-detect and process different image dimensions
-    original_w, original_h = image.size
-    # Adaptive target size based on aspect ratio
-    if original_w / original_h > 1.5 or original_h / original_w > 1.5:
-        # Highly non-square image - use a more appropriate target size
-        if original_w > original_h:
-            new_h = target_size[1]
-            new_w = int(original_w * (new_h / original_h))
-            # Ensure width is divisible by 32 for the model
-            new_w = ((new_w + 31) // 32) * 32
-            if new_w > 1024:  # Cap maximum width
-                new_w = 1024
-                new_h = int(original_h * (new_w / original_w))
-                new_h = ((new_h + 31) // 32) * 32
-        else:
-            new_w = target_size[0]
-            new_h = int(original_h * (new_w / original_w))
-            # Ensure height is divisible by 32 for the model
-            new_h = ((new_h + 31) // 32) * 32
-            if new_h > 1024:  # Cap maximum height
-                new_h = 1024
-                new_w = int(original_w * (new_h / original_h))
-                new_w = ((new_w + 31) // 32) * 32
-        adapted_size = (new_w, new_h)
-    else:
-        # Standard square-ish image
-        adapted_size = target_size
-    
-    # High-quality resize
-    image = image.resize(adapted_size, Image.LANCZOS)
-    
-    # Convert to tensor and add batch dimension with normalization
-    tensor_transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
-    
-    image_tensor = tensor_transform(image).unsqueeze(0)  # Add batch dimension
-    return image_tensor, adapted_size
+# Enhanced version of preprocess_image is now unified with the main implementation
 
 def save_segmentation(output, save_path):
     """Save model output as a segmentation mask image"""
